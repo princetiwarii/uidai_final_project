@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import os
+import json
 import numpy as np
 from engine import run_policy_engine
 
@@ -15,25 +16,28 @@ st.set_page_config(
 st.title("UIDAI Aadhaar Enrollment, Demographic & Biometric Analysis")
 st.markdown("Hackathon Dashboard | Data-driven insights for policymakers")
 
-def load_csv_folder(folder_path):
+
+def load_csv_folder(folder_path, category):
     all_files = os.listdir(folder_path)
     df_list = []
 
     for file in all_files:
-        if file.endswith(".csv"):
+        # Check if the file is a CSV AND contains the specific category keyword
+        if file.endswith(".csv") and category.lower() in file.lower():
             file_path = os.path.join(folder_path, file)
             df = pd.read_csv(file_path)
             df_list.append(df)
 
+    if not df_list:
+        st.error(f"⚠️ No files found for category: {category}")
+        return pd.DataFrame()  # Returns empty DF to prevent script crash
+
     return pd.concat(df_list, ignore_index=True)
 
 # Load data
-enroll_df = load_csv_folder("data")
-demo_df = load_csv_folder("data")
-bio_df = load_csv_folder("data")
-
-import json
-import os
+enroll_df = load_csv_folder("data", "enrolment")
+demo_df = load_csv_folder("data", "demographic")
+bio_df = load_csv_folder("data", "biometric")
 
 @st.cache_data
 def load_india_geojson():
@@ -149,11 +153,6 @@ st.sidebar.download_button(
 )
 
 st.sidebar.success("✅ Engine: v2.4 Stable")
-
-# Add "Target" progress bar
-st.sidebar.subheader("🎯 Monthly Target")
-progress = st.sidebar.progress(75)
-st.sidebar.caption("75% of Monthly Enrollment Target Reached")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("✅ UIDAI Dashboard v2.5")
@@ -1145,7 +1144,7 @@ with tab6:
     st.markdown("## 🤖 UIDAI Policy Intelligence Assistant")
 
     # Setup Gemini
-    os.environ["GOOGLE_API_KEY"] = "AIza..."
+    os.environ["GOOGLE_API_KEY"] = "AIzaSyBxBuos0Gx8kSSYFKWAbZD0sKH5wuoRJDU"
     genai.configure(api_key=os.environ["GOOGLE_API_KEY"])
     model = genai.GenerativeModel("gemini-2.5-flash")
 
